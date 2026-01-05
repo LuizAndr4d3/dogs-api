@@ -1,0 +1,44 @@
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Buddy",
+    "age": 3,
+    "breed": "Labrador Retriever"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "name": "Max",
+    "age": 5,
+    "breed": "German Shepherd"
+  },
+  {
+    "id": "770e8400-e29b-41d4-a716-446655440002",
+    "name": "Luna",
+    "age": 2,
+    "breed": "Siberian Husky"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440003",
+    "name": "Charlie",
+    "age": 7,
+    "breed": "Bulldog"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440004",
+    "name": "Bella",
+    "age": 4,
+    "breed": "Beagle"
+  },
+  {
+    "id": "aa0e8400-e29b-41d4-a716-446655440005",
+    "name": "Rocky",
+    "age": 6,
+    "breed": "Rottweiler"
+  },
+  {
+    "id": "bb0e8400-e29b-41d4-a716-446655440006",
+    "name": "Daisy",
+    "age": 1,
+    "breed": "French Bulldog"
+  }
+]
