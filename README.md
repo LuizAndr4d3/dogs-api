@@ -25,6 +25,7 @@
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Running the Application](#-running-the-application)
+- [Authentication](#-authentication)
 - [API Endpoints](#-api-endpoints)
 - [Request/Response Examples](#-requestresponse-examples)
 - [Project Structure](#-project-structure)
@@ -40,6 +41,7 @@
 ## ✨ Features
 
 - 🐕 **CRUD Operations** - Create, Read, Update, and Delete dogs
+- 🔐 **JWT Authentication** - Secure API endpoints with JSON Web Tokens
 - 📝 **DTO Validation** - Type-safe data transfer objects
 - 🎯 **TypeScript** - Full type safety and modern JavaScript features
 - 🏗️ **NestJS Framework** - Scalable and maintainable architecture
@@ -53,6 +55,9 @@
 - **[NestJS](https://nestjs.com/)** - Progressive Node.js framework
 - **[TypeScript](https://www.typescriptlang.org/)** - Typed superset of JavaScript
 - **[Express](https://expressjs.com/)** - Web framework (via NestJS platform)
+- **[JWT](https://jwt.io/)** - JSON Web Tokens for authentication
+- **[Passport.js](http://www.passportjs.org/)** - Authentication middleware
+- **[bcryptjs](https://www.npmjs.com/package/bcryptjs)** - Password hashing
 - **[UUID](https://www.npmjs.com/package/uuid)** - Unique identifier generation
 - **[Jest](https://jestjs.io/)** - Testing framework
 - **[ESLint](https://eslint.org/)** - Code linting
@@ -74,7 +79,7 @@ Before you begin, ensure you have the following installed:
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/LuizAndr4d3/dogs-api
    cd dogs-api
    ```
 
@@ -106,7 +111,10 @@ Or create a `.env` file in the root directory:
 
 ```env
 PORT=3000
+JWT_SECRET= secret-key-change-in-production
 ```
+
+> **Note**: For production, always use a strong, randomly generated secret key for `JWT_SECRET`. Never commit this to version control.
 
 ---
 
@@ -133,6 +141,110 @@ The API will be available at `http://localhost:3000` (or your configured port).
 
 ---
 
+## 🔐 Authentication
+
+This API uses **JWT (JSON Web Tokens)** for authentication. Some endpoints require a valid JWT token to access.
+
+### Test User
+
+A test user is available for quick testing:
+
+- **Username**: `testuser`
+- **Password**: `securepassword123`
+
+### How Authentication Works
+
+1. **Register** a new user or **Login** with existing credentials
+2. Receive a JWT `access_token` in the response
+3. Include the token in the `Authorization` header for protected endpoints:
+   ```
+   Authorization: Bearer <your-token-here>
+   ```
+
+### Authentication Endpoints
+
+#### Register a New User
+
+**Request:**
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "password": "mypassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "newuser"
+  }
+}
+```
+
+#### Login
+
+**Request:**
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "securepassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "testuser"
+  }
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "statusCode": 401,
+  "message": "Invalid credentials"
+}
+```
+
+### Using the Token
+
+Once you have the `access_token`, include it in the `Authorization` header for protected endpoints:
+
+```http
+POST /dogs/create
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "name": "Rex",
+  "age": 5,
+  "breed": "Labrador"
+}
+```
+
+### Token Expiration
+
+JWT tokens expire after **24 hours**. When a token expires, you'll receive a `401 Unauthorized` response. Simply login again to get a new token.
+
+### User Storage
+
+User data is stored in `users.json` in the root directory. This file is automatically created when the first user registers and is ignored by Git (`.gitignore`).
+
+---
+
 ## 📡 API Endpoints
 
 ### Base URL
@@ -140,15 +252,22 @@ The API will be available at `http://localhost:3000` (or your configured port).
 http://localhost:3000
 ```
 
+### Authentication Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `POST` | `/auth/register` | Register a new user | ❌ |
+| `POST` | `/auth/login` | Login and get JWT token | ❌ |
+
 ### Dogs Endpoints
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| `POST` | `/dogs/create` | Create a new dog | ❌ |
+| `POST` | `/dogs/create` | Create a new dog | ✅ |
 | `GET` | `/dogs/get/:id` | Get a dog by ID | ❌ |
 | `GET` | `/dogs/getall` | Get all dogs | ❌ |
-| `PUT` | `/dogs/edit/:id` | Update a dog by ID | ❌ |
-| `DELETE` | `/dogs/delete/:id` | Delete a dog by ID | ❌ |
+| `PUT` | `/dogs/edit/:id` | Update a dog by ID | ✅ |
+| `DELETE` | `/dogs/delete/:id` | Delete a dog by ID | ✅ |
 
 ---
 
@@ -159,6 +278,7 @@ http://localhost:3000
 **Request:**
 ```http
 POST /dogs/create
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
 {
@@ -167,6 +287,8 @@ Content-Type: application/json
   "breed": "Golden Retriever"
 }
 ```
+
+> **Note**: This endpoint requires authentication. Include the JWT token in the `Authorization` header.
 
 **Response:**
 ```json
@@ -233,6 +355,7 @@ GET /dogs/getall
 **Request:**
 ```http
 PUT /dogs/edit/550e8400-e29b-41d4-a716-446655440000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
 {
@@ -240,6 +363,8 @@ Content-Type: application/json
   "age": 4
 }
 ```
+
+> **Note**: This endpoint requires authentication. Include the JWT token in the `Authorization` header.
 
 **Response:**
 ```json
@@ -256,11 +381,22 @@ Content-Type: application/json
 **Request:**
 ```http
 DELETE /dogs/delete/550e8400-e29b-41d4-a716-446655440000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
+
+> **Note**: This endpoint requires authentication. Include the JWT token in the `Authorization` header.
 
 **Response:**
 ```http
 HTTP/1.1 200 OK
+```
+
+**Error Response (401 Unauthorized):**
+```json
+{
+  "statusCode": 401,
+  "message": "Unauthorized"
+}
 ```
 
 ---
@@ -270,6 +406,14 @@ HTTP/1.1 200 OK
 ```
 dogs-api/
 ├── src/
+│   ├── auth/
+│   │   ├── auth.controller.ts    # Authentication endpoints
+│   │   ├── auth.service.ts        # Authentication logic & user management
+│   │   ├── auth.module.ts         # Auth module configuration
+│   │   ├── auth.dtos.ts            # Auth DTOs (Register, Login)
+│   │   ├── user.interface.ts      # User interface
+│   │   ├── jwt.strategy.ts        # JWT Passport strategy
+│   │   └── jwt-auth.guard.ts      # JWT authentication guard
 │   ├── dogs/
 │   │   ├── dogs.controller.ts    # Route handlers
 │   │   ├── dogs.services.ts      # Business logic with JSON file operations
@@ -285,6 +429,7 @@ dogs-api/
 ├── dist/                         # Compiled JavaScript files
 ├── node_modules/                 # Dependencies
 ├── dogs.json                     # JSON database file (auto-created)
+├── users.json                    # Users database file (auto-created, git-ignored)
 ├── package.json                  # Project dependencies and scripts
 ├── tsconfig.json                 # TypeScript configuration
 ├── eslint.config.mjs            # ESLint configuration
@@ -313,17 +458,16 @@ dogs-api/
 
 ## 💾 Data Storage
 
-This API uses a JSON file (`dogs.json`) located in the root directory for data persistence. The file is automatically created when the first dog is added to the system.
+This API uses JSON files located in the root directory for data persistence. Files are automatically created when needed.
 
-### How it works:
+### Dogs Storage (`dogs.json`)
 
-- **Automatic Creation**: The `dogs.json` file is created automatically if it doesn't exist
-- **File Location**: The file is stored in the project root directory
-- **Data Format**: All dogs are stored as a JSON array
+- **Automatic Creation**: Created automatically when the first dog is added
+- **File Location**: Project root directory
+- **Data Format**: JSON array of dog objects
 - **Persistence**: All CRUD operations read from and write to this file directly
 
-### File Structure:
-
+**File Structure:**
 ```json
 [
   {
@@ -335,7 +479,27 @@ This API uses a JSON file (`dogs.json`) located in the root directory for data p
 ]
 ```
 
-> **Note**: For production applications with high traffic or concurrent access, consider migrating to a proper database (PostgreSQL, MongoDB, etc.) as listed in Future Enhancements.
+### Users Storage (`users.json`)
+
+- **Automatic Creation**: Created automatically when the first user registers
+- **File Location**: Project root directory
+- **Git Ignored**: This file is excluded from version control (`.gitignore`)
+- **Data Format**: JSON array of user objects with hashed passwords
+- **Security**: Passwords are hashed using bcrypt (10 rounds)
+
+**File Structure:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "testuser",
+    "password": "$2a$10$hashedpassword...",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]
+```
+
+> **Note**: For production applications with high traffic or concurrent access, consider migrating to a proper database (PostgreSQL, MongoDB, etc.).
 
 ---
 
@@ -365,8 +529,6 @@ npm run test:e2e
 
 ## 🔮 Future Enhancements
 
-- [ ] Authentication with JWT (JSON Web Tokens)
-- [ ] Basic Auth implementation
 - [ ] Swagger/OpenAPI documentation
 - [ ] Filtering and sorting capabilities
 
@@ -393,7 +555,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is licensed under the UNLICENSED license.
+This project is currently UNLICENSED.
 
 ---
 
@@ -412,3 +574,4 @@ Luiz Gustavo Andrade
 
 ---
 
+> **Note**: This README.md was enhanced with AI
